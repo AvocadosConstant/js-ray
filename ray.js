@@ -12,19 +12,26 @@ function Player(name) {
     this.z = 0;
     this.a = 0; // angle in radians
 
-    let turnRate = 0.1;
+    let turnRate = 0.04;
+
+    let moveSpeed = 3;
+    let strafeSpeed = moveSpeed * 0.6;
 
     this.moveForward = function() {
-        this.z -= 5;
+        this.x += moveSpeed * Math.cos(this.a);
+        this.z += moveSpeed * Math.sin(this.a);
     }
     this.moveBackwards = function() {
-        this.z += 5;
-    }
-    this.strafeLeft = function() {
-        this.x += 5;
+        this.x -= moveSpeed * Math.cos(this.a);
+        this.z -= moveSpeed * Math.sin(this.a);
     }
     this.strafeRight = function() {
-        this.x -= 5;
+        this.x += strafeSpeed * Math.cos(this.a + Math.PI / 2);
+        this.z += strafeSpeed * Math.sin(this.a + Math.PI / 2);
+    }
+    this.strafeLeft = function() {
+        this.x += strafeSpeed * Math.cos(this.a - Math.PI / 2);
+        this.z += strafeSpeed * Math.sin(this.a - Math.PI / 2);
     }
     this.turnRight = function() {
         this.a += turnRate;
@@ -126,19 +133,20 @@ function drawMinimap() {
             ctx.fillRect(chunkPxX, chunkPxZ, chunkXSize, chunkZSize);
         }
     }
-    //console.log(player.x, chunkX, player.z, chunkZ);
 
     // Player indicator
     miniMapPlayer = {
         "x": origin.x + dim / 2,
         "z": origin.z + dim / 2
     }
-    drawCircle(miniMapPlayer.x, miniMapPlayer.z, 5, "red");
+    drawCircle(miniMapPlayer.x, miniMapPlayer.z, 3, "red");
     ctx.moveTo(miniMapPlayer.x, miniMapPlayer.z);
     ctx.lineTo(
         miniMapPlayer.x + 10 * Math.cos(player.a),
         miniMapPlayer.z + 10 * Math.sin(player.a)
     );
+    ctx.strokeStyle = "red";
+    ctx.lineWidth = 5;
     ctx.stroke();
 }
 
@@ -160,9 +168,9 @@ function processInput() {
     if (pressedKeySet.has("s"))
         player.moveBackwards();
     if (pressedKeySet.has("a"))
-        player.strafeRight();
-    if (pressedKeySet.has("d"))
         player.strafeLeft();
+    if (pressedKeySet.has("d"))
+        player.strafeRight();
     if (pressedKeySet.has("ArrowLeft"))
         player.turnLeft();
     if (pressedKeySet.has("ArrowRight"))

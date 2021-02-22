@@ -10,7 +10,9 @@ function Player(name) {
     this.name = name;
     this.x = 0;
     this.z = 0;
-    this.a = 0;
+    this.a = 0; // angle in radians
+
+    let turnRate = 0.1;
 
     this.moveForward = function() {
         this.z -= 5;
@@ -24,10 +26,20 @@ function Player(name) {
     this.strafeRight = function() {
         this.x -= 5;
     }
+    this.turnRight = function() {
+        this.a += turnRate;
+        if (this.a >= 2 * Math.PI)
+            this.a -= 2 * Math.PI;
+    }
+    this.turnLeft = function() {
+        this.a -= turnRate;
+        if (this.a < 0)
+            this.a += 2 * Math.PI;
+    }
 }
 
 let player = new Player("Me");
-console.log(player);
+//console.log(player);
 
 function drawCircle(x, z, radius, color) {
     ctx.beginPath();
@@ -70,7 +82,7 @@ function drawMinimap() {
     let dim = 128;
     let origin = {x: canvas.width - dim - 10, z: 10};
 
-    let scale = 1;
+    let scale = 4;
 
     // Background
     ctx.fillStyle = "black";
@@ -83,10 +95,10 @@ function drawMinimap() {
         for (chunkX = 0; chunkX < stageX; chunkX++) {
             let color = minimapColor(stage[chunkZ][chunkX]);
 
-            chunkPxX = chunkX * chunkDim - player.x + origin.x + dim / 2;
-            chunkPxZ = chunkZ * chunkDim - player.z + origin.z + dim / 2;
-            chunkXSize = chunkDim - 0;
-            chunkZSize = chunkDim - 0;
+            chunkPxX = chunkX * chunkDim - player.x/scale + origin.x + dim / 2;
+            chunkPxZ = chunkZ * chunkDim - player.z/scale + origin.z + dim / 2;
+            chunkXSize = chunkDim + 1;
+            chunkZSize = chunkDim + 1;
 
             // Cut off minimap chunks if outside bounds
             if (chunkPxX < origin.x) {
@@ -114,10 +126,20 @@ function drawMinimap() {
             ctx.fillRect(chunkPxX, chunkPxZ, chunkXSize, chunkZSize);
         }
     }
-    console.log(player.x, chunkX, player.z, chunkZ);
+    //console.log(player.x, chunkX, player.z, chunkZ);
 
     // Player indicator
-    drawCircle(origin.x + dim / 2, origin.z + dim / 2, 5, "red");
+    miniMapPlayer = {
+        "x": origin.x + dim / 2,
+        "z": origin.z + dim / 2
+    }
+    drawCircle(miniMapPlayer.x, miniMapPlayer.z, 5, "red");
+    ctx.moveTo(miniMapPlayer.x, miniMapPlayer.z);
+    ctx.lineTo(
+        miniMapPlayer.x + 10 * Math.cos(player.a),
+        miniMapPlayer.z + 10 * Math.sin(player.a)
+    );
+    ctx.stroke();
 }
 
 function drawPlayer() {
@@ -141,25 +163,27 @@ function processInput() {
         player.strafeRight();
     if (pressedKeySet.has("d"))
         player.strafeLeft();
+    if (pressedKeySet.has("ArrowLeft"))
+        player.turnLeft();
+    if (pressedKeySet.has("ArrowRight"))
+        player.turnRight();
 }
 
 document.addEventListener('keydown', (e) => {
     pressedKeySet.add(e.key)
     //console.log(player);
-    console.log(pressedKeySet);
-    processInput();
-    redraw();
-})
-document.addEventListener('keyup', (e) => {
-    pressedKeySet.delete(e.key)
-    console.log(pressedKeySet);
-    processInput();
-    redraw();
+    //console.log(pressedKeySet);
+    //redraw();
 })
 
-/*
+document.addEventListener('keyup', (e) => {
+    pressedKeySet.delete(e.key)
+    //console.log(pressedKeySet);
+    //redraw();
+})
+
 setInterval(function() {
+    processInput();
     redraw();
 }, 10)
-*/
 redraw();
